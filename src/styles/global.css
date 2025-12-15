@@ -1,0 +1,166 @@
+/// <reference lib="dom" />
+import gsap from 'gsap';
+import ScrollTrigger from 'gsap/ScrollTrigger';
+
+// Register GSAP Plugin
+gsap.registerPlugin(ScrollTrigger);
+
+class HeroAnimation extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+  }
+
+  connectedCallback() {
+    this.render();
+    this.initAnimation();
+  }
+
+  disconnectedCallback() {
+    if (this.ctx) this.ctx.revert();
+  }
+
+  render() {
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          width: 100%;
+          min-height: 100vh;
+        }
+        .container {
+          background-color: black;
+          min-height: 100vh;
+          color: white;
+          direction: rtl;
+          position: relative;
+          overflow: hidden;
+        }
+        .trigger-wrapper {
+          height: 100vh;
+          width: 100%;
+          position: relative;
+          overflow: visible;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .video-mask-wrapper {
+          position: absolute;
+          inset: 0;
+          z-index: 50;
+          background-color: white;
+          overflow: hidden;
+        }
+        .video-text-mask-container {
+          width: 100%;
+          height: 100%;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .video-bg {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .mask-text {
+          font-size: 15vw;
+          font-weight: 900;
+          color: black;
+          background-color: white;
+          mix-blend-mode: screen;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: absolute;
+          inset: 0;
+        }
+        .fixed-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 4rem;
+            background-color: rgba(0,0,0,0.9);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            z-index: 500;
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .text-main {
+            font-size: 5rem;
+            font-weight: 900;
+            text-align: center;
+        }
+      </style>
+
+      <div class="container">
+        <div class="fixed-header">
+            <span>النسخة</span>
+        </div>
+
+        <div class="trigger-wrapper">
+            <!-- Video Mask Layer -->
+            <div class="video-mask-wrapper">
+                <div class="video-text-mask-container">
+                    <video class="video-bg" autoplay muted loop playsinline>
+                        <source src="https://cdn.pixabay.com/video/2025/11/09/314880.mp4" type="video/mp4" />
+                    </video>
+                    <div class="mask-text">النسخة</div>
+                </div>
+            </div>
+
+            <!-- Content Layer -->
+            <div class="content-wrapper" style="position: relative; z-index: 40; text-align: center;">
+                <h1 class="text-main">بس اصلي</h1>
+            </div>
+        </div>
+      </div>
+    `;
+  }
+
+  initAnimation() {
+    const container = this.shadowRoot.querySelector('.container');
+    const trigger = this.shadowRoot.querySelector('.trigger-wrapper');
+    const mask = this.shadowRoot.querySelector('.video-mask-wrapper');
+    const header = this.shadowRoot.querySelector('.fixed-header');
+    const title = this.shadowRoot.querySelector('.content-wrapper');
+
+    if (!container || !trigger) return;
+
+    this.ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: this,
+          start: "top top",
+          end: "+=3000",
+          scrub: 1,
+          pin: true,
+        }
+      });
+
+      // Phase 1: Reveal
+      tl.to(mask, {
+        scale: 5,
+        y: -600,
+        opacity: 0,
+        duration: 3,
+        ease: "power2.inOut",
+        pointerEvents: "none"
+      })
+        .fromTo(header, { opacity: 0 }, { opacity: 1, duration: 0.8 }, "-=2")
+        .fromTo(title, { opacity: 0, y: 100 }, { opacity: 1, y: 0, duration: 1 }, "-=1");
+
+    }, this.shadowRoot);
+  }
+}
+
+customElements.define('hero-animation', HeroAnimation);
